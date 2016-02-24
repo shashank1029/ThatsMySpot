@@ -1,0 +1,7 @@
+{"properties":{"id":{"type": "integer"},"borough":{"type": "string"},
+	"ordernum":{"type": "string"},"seqnum":{"type":"integer"},
+	"SG_MUTCD_C":{"type":"string"},"distfromcurb":{"type":"integer"},
+	"signfc":{"type":"string"},"arrow":{"type":"string"},"x":{"type":"float"},"y":{"type":"float"},
+	"signdesc":{"type":"string"},"location":{"type":"geo_point", "lat_lon": "true"}, 
+	"canPark":{"type":"boolean"}, "noParkDays":[], "noParkTime":[], "canParkDays":[], "canParkTime":[] ,
+	"canParkDuration":{"type":"integer"}, "isAvailable" :{"type":"boolean"}, "userId" : {"type":"string"} }}

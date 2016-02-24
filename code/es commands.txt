@@ -1,0 +1,80 @@
+
+#update parking spot is available or not
+
+POST park_reg3_copy/parksgn3_copy/13458544/_update
+{
+  "doc" : {"isAvailable" : false}, {"user
+}
+
+#search for close by parking spots, that are available and in which you can park
+res=es.search(index=index, doc_type=doc_type,
+		body=
+		{"size" : 20,
+		"sort" : [
+       {
+           "_geo_distance" : {
+               "location" : {
+                   "lat" : lat,
+                   "lon" : lon
+               },
+               "order" : "asc",
+               "unit" : "km",
+               "distance_type" : "plane"
+           }
+       }
+       # ,
+       # {
+       #   "seqnum":
+       #   {
+       #     "order": "asc"  
+       #   }
+       # }
+   ],
+  		"query": 
+			{"bool": 
+				{"must":  
+				  [{"match" :
+				      {"canPark": True}
+				    },
+				    {"match":
+				      {"isAvailable": True}
+				    }
+				  ], 
+				  "filter":  
+					{
+					"geo_distance":  
+						{
+						"distance": "500km",
+						"location": 
+							{
+							"lat":lat,
+							"lon":lon
+							}
+						}
+					}
+				}
+			}
+		})
+
+#decrease available spots
+es.update(index="park_reg5copy", doc_type="parksgn5copy",id=<>,body={
+   "script":
+   {
+    "inline": "ctx._source.avaliableSpots -= count",
+        "params" : {
+             "count" : 1
+         } 
+   }
+ })
+
+
+#increase available spots
+es.update(index="park_reg5copy", doc_type="parksgn5copy",id=<>,body={
+   "script":
+   {
+    "inline": "ctx._source.avaliableSpots += count",
+        "params" : {
+             "count" : 1
+         } 
+   }
+ })

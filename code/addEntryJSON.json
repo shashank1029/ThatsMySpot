@@ -1,0 +1,31 @@
+{
+	"_op_type": "index",
+	"_index": "park_reg2",
+	"_id": row[0],
+	"_type": "parksgn_2",
+	"doc": {
+		"id": int(row[0]),
+		"borough": row[1],
+		"ordernum": row[2],
+		"seqnum": int(row[3]),
+		"SG_MUTCD_C": row[4],
+		"distfromcurb": int(row[5]),
+		"signfc": row[6],
+		"arrow": row[7],
+		"x": float(row[8]),
+		"y": float(row[9]),
+		"signdesc": row[10],
+		"location": {
+			"lat": row[11],
+			"lon": row[12]
+		},
+		"canPark": "true",
+		"noParkDays": [""],
+		"noParkTime": [""],
+		"canParkDays": [""],
+		"canParkTime": [""],
+		"canParkDuration": -1,
+		"isAvailable": "true",
+		"userId": ""
+	}
+}

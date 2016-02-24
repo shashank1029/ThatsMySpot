@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <meta charset=utf-8 />
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.2.4/mapbox.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.2.4/mapbox.css' rel='stylesheet' />
+ <style>
+    body { margin:0; padding:0; }
+    .map { position:absolute; top:0; bottom:0; width:100%; }
+  </style>
+
+<div id='map-leaflet' class='map'> </div>
+<script>
+var lat = "{{lat}}";
+var lon = "{{lon}}";
+var res = "{{res}}".split("&#34;").join("\"");
+var resJSON =JSON.parse(res);
+var hits = resJSON.hits.hits;
+
+L.mapbox.accessToken = 'pk.eyJ1Ijoic2hhc2hhbmsxMDI5IiwiYSI6ImNpanp1aGp3azJ6ZWd2Z2x6ZDlobXB1ajkifQ.u-fXXU_MpLS8TxFtt2PAgA';
+var mapLeaflet = L.mapbox.map('map-leaflet', 'mapbox.streets')
+  .setView([lat, lon], 15)
+L.marker([lat,lon],opacity=0.2).addTo(mapLeaflet);
+for(i=0; i<hits.length; i++){
+  result=hits[i]._source.location;
+  L.marker([result.lat,result.lon]).addTo(mapLeaflet);
+}
+mapLeaflet.scrollWheelZoom.disable();
+</script>
+</body>
+</html>

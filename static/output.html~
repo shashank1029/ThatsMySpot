@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script>
+var lat = "{{lat}}";
+document.write("<h1>"+lat+"</h1>");
+document.write("<h2>"+"{{test}}"+"</h2>");
+</script>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <meta charset=utf-8 />
+  
+ 
+<script>
+var lat = "{{lat}}";
+var lon = "{{lon}}";
+  
+
+//var test = "";
+//document.write("<h1>"+lat+"</h1>");
+//document.write("<h2>{{test}}</h2>");
+var res = "{{res}}";
+document.write(res);
+document.write("</br>")
+document.write("</br>")
+console.log(typeof(res));
+//var resJson =JSON.parse(JSON.stringify(res));
+var resJson =JSON.parse(res);
+//resJson
+document.write(resJson);
+
+//for(i=0; i<hits.length; i++)
+//{ 	result=hits[i];//._source;//.location;
+//	lati = result.lat;
+//	longi = result.lon;
+//	document.write(lati + ",, " + longi);
+//document.write(result)
+document.write("</br>")
+//}	
+</script>
+
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Home</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.js'></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<link href='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.css' rel='stylesheet' />
+<!-- Style for map background -->
+<style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:16; bottom:0; width:100%; height: 95%}
+</style>
+</head>
+
+<!-- Style for form -->
+<style>
+.ui-button {
+  background:#3887BE;
+  color:#FFF;
+  display:block;
+  position:absolute;
+  top:50%;left:50%;
+  width:auto;
+  margin:-20px 0 0 -80px;
+  z-index:100;
+  text-align:center;
+  padding:10px;
+  border:1px solid rgba(0,0,0,0.4);
+  border-radius:3px;
+  }
+  .ui-button:hover {
+    background:#3074a4;
+    color:#fff;
+    }
+
+</style>
+
+<!-- Style for links bar -->
+<style>
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #111;
+}
+.active {
+    background-color: #4CAF50;
+}
+</style>
+<body>
+<div>
+<ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="http://www.slideshare.net/ShashankSinghal9/shashank-singhal-insight-thats-my-spot?qid=cce6f25e-dcc7-4045-8bf6-5e87dd4af40e&v=&b=&from_search=1">Presentation</a></li>
+  <li><a href="https://github.com/shashank1029">GitHub</a></li>
+</ul>
+<div id='map'></div>
+
+<div id='inputForm'>
+<form action="/output" method="GET" id="findSpot">
+<div class='ui-button' id="userInputs">
+<text >{{error}}</text>
+
+<input type="text" id="userid" name="userid" autocomplete="on" placeholder="Enter username"><br/>
+<br/>
+<button type="button" id='geolocate' name='geolocate'>Find me a parking spot</button>
+	<input type="hidden" id="lati" value="lati" name="lati">
+		<input type="hidden" id="longi" value="longi" name="longi">
+ 
+ 
+ </div>
+</form>
+</div>
+</div>
+
+<!--Get location and username -->
+<script>
+L.mapbox.accessToken = "{{mapbox}}";
+var geolocate = document.getElementById('geolocate');
+var map = L.mapbox.map('map', 'mapbox.streets').setView([40.767834, -73.912088],12);
+var myLayer = L.mapbox.featureLayer().addTo(map);
+var parkingLayer=L.mapbox.featureLayer();
+// Initialize the geocoder control and add it to the map.
+var geocoderControl = L.mapbox.geocoderControl('mapbox.places');
+geocoderControl.addTo(map);
+var usermarker = L.marker([40.767834, -73.912088], {riseOnHover:"True", title:"You're here!", draggable:true,
+     icon:L.mapbox.marker.icon({
+        'marker-size': 'medium',
+        'marker-symbol': 'star',
+        'marker-color': '#fa0'
+    })}).addTo(myLayer);
+var markersMap= new Map();
+var markersIdList = [];
+var shouldRefresh = true;
+var spotsData;
+
+var userInputsDiv = document.getElementById("userInputs");
+
+var lati= document.getElementById('lati');
+var longi= document.getElementById('longi');
+var formSpot = document.getElementById("findSpot");
+var userID = document.getElementById("userid");
+var defaultlat = 40.754855;
+var defaultlng = -73.984117;
+console.log("somewhere");
+// This uses the HTML5 geolocation API, which is available on
+// most mobile browsers and modern browsers, but not in Internet Explorer
+//
+// See this chart of compatibility for details:
+// http://caniuse.com/#feat=geolocation
+if (!navigator.geolocation) {
+    geolocate.innerHTML = 'Geolocation is not available';
+} else {
+    geolocate.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        map.locate();
+    };
+}
+var output = document.getElementById('output');
+geocoderControl.on('found', function(res) {
+    output.innerHTML = JSON.stringify(res.results/*.features[0]*/);
+});
+
+//Position found
+map.on('locationfound', function(e) {
+   // Once we've got a position, zoom and center the map
+// on it, and add a single marker.
+    map.fitBounds(e.bounds);
+      
+    //submit form with information 
+    lati.value = e.latlng.lat;
+    longi.value = e.latlng.lng;
+    console.log("find spots");
+    markUser(e.latlng.lat, e.latlng.lng);
+    //var testInterval = setInterval(function(){ alert("Hello"); },2000);
+    var markInterval = setInterval("getSpots()",2000);
+    //getSpots();
+    //clearInterval(markInterval);  -- stops the call
+
+    // hide the geolocation form
+       // document.getElementById("inputForm").removeChild(document.getElementById("findSpot"));
+        document.getElementById("inputForm").style.display = "none";
+    //formSpot.click();   
+
+    // And hide the geolocation button
+    //geolocate.parentNode.removeChild(geolocate);
+});
+
+// If the user chooses not to allow their location
+// to be shared, display an error message.
+map.on('locationerror', function() {
+    lati.value=defaultlat;
+    longi.value=defaultlng;
+    map.setView([defaultlat, defaultlng],17);
+    markUser(defaultlat, defaultlng);
+    document.getElementById("inputForm").style.display = "none";
+    var markInterval = setInterval("getSpots()",2000);
+    //geolocate.innerHTML = 'Position could not be found, please check if location sharing is enabled';
+});
+
+
+</script>
+
+<!-- Ajax call to get spots-->
+<script>
+function getSpots() {
+    console.log("getSpots");
+
+     $.getJSON('/output', {
+        lati: lati.value,
+        longi: longi.value,
+        userid: $('input[name="userid"]').val(),
+        parkingids: JSON.stringify({"ids": markersIdList}),
+        refresh: shouldRefresh
+      }, function(data) {
+        console.log("check for data");
+        if (data!=null){
+        //$("#result").text(data.lat);
+        markSpots(data);
+        console.log("Got data");
+      }else{
+        console.log("No data");
+      }
+      });
+      //getSpots();
+      console.log("nooooooo")
+      return false;
+    }
+
+</script>
+
+<!-- Show spots-->
+<script>
+function markSpots(data){
+var lat = data.lat;
+var lon = data.lon;
+var resJSON = data.res;//.split("&#34;").join("\"");
+
+var newSpotsFound = data.newSpotsFound;
+var message = "{{message}}"
+var parklati = "{{parklati}}"
+var parklongi = "{{parklongi}}"
+console.log(lat, lon)
+//var markers = [];
+
+if(message!=null && message=="success")
+{
+  alert("That's your spot")
+}
+
+if(parklati)
+  markParking(parklati,parklongi);
+  if(newSpotsFound){
+      markParkingSpots(resJSON.hits.hits);
+      console.log(markersMap)
+    }else{
+ for(i=0; i<hits.length; i++)
+ {  source = hits[i]._source;
+    markersMap.get(source.id).setPopupContent("Sign: "+ source.signdesc +"</br>"+ "Street:"+ source.main_street+ "</br> "+ source.avaliableSpots +" spots available off "+ source.totalSpots)
+  }
+}
+ //console.log(markers.toString())
+}
+</script>
+<!-- update user location-->
+<script type="text/javascript">
+function markUser(lat, lon){
+  var newLatLng = new L.LatLng(lat, lon);
+  usermarker.setLatLng(newLatLng);
+}
+
+</script>
+<!--mark user parking spot -->
+<script type="text/javascript">
+  function markParking(parklati,parklongi ){ 
+L.marker([parklati,parklongi],{riseOnHover:"True",icon:L.mapbox.marker.icon({
+        'marker-size': 'medium',
+        'marker-symbol': 'car',
+        'marker-color': '#fa0'
+    })},{draggable:true}).bindPopup("That's your spot").addTo(map);
+}
+</script>
+<!--mark spots -->
+<script type="text/javascript">
+  function markParkingSpots(hits){
+    map.removeLayer(parkingLayer);
+    parkingLayer = new L.mapbox.featureLayer();
+    markersIdList = [];
+    markersMap = new Map();
+    for(i=0; i<hits.length; i++){
+		  source = hits[i]._source;
+		  locations=source.location;
+		  marker = new L.marker([locations.lat,locations.lon],{riseOnHover:"True",icon:L.mapbox.marker.icon({
+		        'marker-size': 'medium',
+		        'marker-symbol': 'parking',
+		        'marker-color': '#3ca0d3'
+		    })});
+		  marker.bindPopup(
+		    "Sign: "+ source.signdesc +"</br>"+ "Street:"+ source.main_street+ "</br> "+ source.avaliableSpots +" spots available off "+ source.totalSpots ).addTo(parkingLayer);
+		  markersMap.set(source.id, marker);
+		  markersIdList.push(source.id);
+	}
+	shouldRefresh=false;
+  	map.addLayer(parkingLayer);
+  	//return markersMap;
+  	}
+
+</script>
+</body>
+</html>
+
+

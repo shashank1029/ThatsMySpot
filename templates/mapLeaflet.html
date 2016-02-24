@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Home</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+ <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+ <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+
+
+<style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+</style>
+</head>
+<body>
+
+<style>
+.ui-button {
+  background:#3887BE;
+  color:#FFF;
+  display:block;
+  position:absolute;
+  top:50%;left:50%;
+  width:auto;
+  margin:-20px 0 0 -80px;
+  z-index:100;
+  text-align:center;
+  padding:10px;
+  border:1px solid rgba(0,0,0,0.4);
+  border-radius:3px;
+  }
+  .ui-button:hover {
+    background:#3074a4;
+    color:#fff;
+    }
+</style>
+
+<div id='map'></div>
+<form display="none" action="/output" method="GET" id="findSpot">
+<div class='ui-button' id="userInputs">
+<text >{{error}}</text>
+</br>
+<input type="text" id="userid" name="userid" autocomplete="on" placeholder="Enter username"><br/>
+<br/>
+<button type="button" id='geolocate' name='geolocate'>Find me a parking spot</a>
+	<input type="hidden" id="lati" value="lati" name="lati">
+		<input type="hidden" id="longi" value="longi" name="longi">
+ 
+ 
+ </div>
+</form>
+
+<!-- Ajax call to get spots-->
+<script type=text/javascript>
+  
+    
+
+  function getSpots(lat, lng) {
+    console.log("getSpots");
+      $.getJSON('http://localhost:5000/output', {
+        lati: lat,
+        longi: lng,
+        userid: $('input[name="userid"]').val(),
+        refresh: true,
+        //a: $('input[name="a"]').val(),
+        //b: $('input[name="b"]').val()
+      }, function(data) {
+        console.log(data.lat);
+        //$("#result").text(data.lat);
+        markSpots(data)
+        // hide the geolocation form
+        //geolocate.parentNode.removeChild(document.getElementById(findSpot));
+      });
+      return false;
+    };
+
+</script>
+
+<!--Get location and username -->
+<script>
+L.mapbox.accessToken = "{{mapbox}}";
+var geolocate = document.getElementById('geolocate');
+var map = L.mapbox.map('map', 'mapbox.streets');
+var myLayer = L.mapbox.featureLayer().addTo(map);
+
+var userInputsDiv = document.getElementById("userInputs");
+
+var lati= document.getElementById('lati');
+var longi= document.getElementById('longi');
+var formSpot = document.getElementById("findSpot");
+
+// This uses the HTML5 geolocation API, which is available on
+// most mobile browsers and modern browsers, but not in Internet Explorer
+//
+// See this chart of compatibility for details:
+// http://caniuse.com/#feat=geolocation
+if (!navigator.geolocation) {
+    geolocate.innerHTML = 'Geolocation is not available';
+} else {
+    geolocate.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        map.locate();
+    };
+}
+
+
+//Position found
+map.on('locationfound', function(e) {
+   // Once we've got a position, zoom and center the map
+// on it, and add a single marker.
+    map.fitBounds(e.bounds);
+
+    myLayer.setGeoJSON({
+        type: 'Feature',
+        geometry: {
+            type: 'Point',
+            coordinates: [e.latlng.lng, e.latlng.lat]
+        },
+        properties: {
+            'title': 'Here I am!',
+            'marker-color': '#ff8888',
+            'marker-symbol': 'star'
+        }
+    } );
+      
+    //submit form with information 
+    lati.value = e.latlng.lat;
+    longi.value = e.latlng.lng;
+    console.log("find spots");
+    getSpots(e.latlng.lat, e.latlng.lng);
+    //formSpot.click();   
+
+    // And hide the geolocation button
+    //geolocate.parentNode.removeChild(geolocate);
+
+    
+});
+
+// If the user chooses not to allow their location
+// to be shared, display an error message.
+map.on('locationerror', function() {
+    geolocate.innerHTML = 'Position could not be found, please check if location sharing is enabled';
+});
+
+
+</script>
+
+<!-- Show spots-->
+<script>
+function markSpots(data){
+
+/*var lat = '{{lat}}';
+var lon = "{{lon}}";
+var res = "{{res}}".split("&#34;").join("\"");
+var resJSON =JSON.parse(res);
+var hits = resJSON.hits.hits;
+var message = "{{message}}"
+var parklati = "{{parklati}}"
+var parklongi = "{{parklongi}}"*/
+
+
+var lat = data.lat;
+var lon = data.lon;
+var res = data.res;//.split("&#34;").join("\"");
+//var resJSON =JSON.parse(res);
+var resJSON=res;
+var hits = resJSON.hits.hits;
+var message = "{{message}}"
+var parklati = "{{parklati}}"
+var parklongi = "{{parklongi}}"
+console.log(lat, lon)
+
+//L.mapbox.accessToken = "{{mapbox}}";
+//var mapLeaflet = L.mapbox.map('map', 'mapbox.streets').setView([lat, lon],20) 
+
+/*var myLocationIcon = L.icon({
+  marker-size: 'large',
+        marker-symbol: 'bus',
+        marker-color: '#fa0',
+  iconSize: [30, 70],
+  iconAnchor: [22, 94],
+  popupAnchor: [-3, -76],
+  //shadowUrl: 'my-icon-shadow.png',
+  //shadowRetinaUrl: 'my-icon-shadow@2x.png',
+  //shadowSize: [68, 95],
+  //shadowAnchor: [22, 94]
+});*/
+
+L.marker([lat,lon], {riseOnHover:"True", title:"You're here!", draggable:true,
+     icon:L.mapbox.marker.icon({
+        'marker-size': 'medium',
+        'marker-symbol': 'star',
+        'marker-color': '#fa0'
+    })}).addTo(myLayer);
+
+if(message!=null && message=="success")
+{
+  alert("That's your spot")
+}
+
+if(parklati)
+{ 
+L.marker([parklati,parklongi],{riseOnHover:"True",icon:L.mapbox.marker.icon({
+        'marker-size': 'medium',
+        'marker-symbol': 'car',
+        'marker-color': '#fa0'
+    })},{draggable:true}).bindPopup("That's your spot").addTo(mapLeaflet);
+}
+
+for(i=0; i<hits.length; i++){
+  result=hits[i]._source.location;
+  L.marker([result.lat,result.lon],{riseOnHover:"True",icon:L.mapbox.marker.icon({
+        'marker-size': 'medium',
+        'marker-symbol': 'parking',
+        'marker-color': '#3ca0d3'
+    })})
+  .bindPopup(
+    hits[i]._source.signdesc+" "+ result.lat+ " " + result.lon /*+'<form action="/parkhere" method="GET" id="parkhere"><input type="hidden" id="lati" value= name="lati"><input type="hidden" id="longi" value="longi" name="longi"><input type="hidden" id="parklati" value="parklati" name="parklati"><input type="hidden" id="parklongi" value="parklongi" name="parklongi"><input type="hidden" id="parkingspotid" value="lati" name="parkingspotid"><input type="submit" value="Park Here!"></form>'
+    */)
+  .addTo(mapLeaflet);
+}
+}
+//mapLeaflet.scrollWheelZoom.disable();
+</script>
+
+</body>
+</html>
+
+
